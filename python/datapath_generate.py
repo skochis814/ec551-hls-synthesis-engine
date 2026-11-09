@@ -1,4 +1,17 @@
-import math
+
+""" schedule = {
+    "inputs": {"A": "A_0", "B": "B_0"},
+    "outputs": {"X": "X_2", "Y": "Y_1"},
+    "cycles": [
+        [  # Cycle 0: X = A + B and Y = A * B
+            {"op": "add", "unit": 0, "lhs": "A_0", "rhs": "B_0", "dest": "X_1"},
+            {"op": "mul", "unit": 0, "lhs": "A_0", "rhs": "B_0", "dest": "Y_1"},
+        ],
+        [  # Cycle 1: X = X + Y
+            {"op": "add", "unit": 0, "lhs": "X_1", "rhs": "Y_1", "dest": "X_2"},
+        ],
+    ],
+} """
 
 def generate_datapath(schedule):
     lines = []
@@ -23,11 +36,12 @@ def generate_datapath(schedule):
     
     lines.append("module datapath(")
     lines.append("  input clk,")
-    lines.append("  input reset,")
     lines.append("  input load,")
+    lines.append("  input [14:0] select,")
     lines.append(f"  input [{state_width - 1}:0] state,")
     for input in inputs:
         lines.append(f"  input [1:0] {input},")
+    lines.append("  output reg [31:0] observe,")
     lines.append(",\n".join(f"  output [31:0] {output}" for output in outputs))
     lines.append(");")
     lines.append("")
@@ -41,6 +55,7 @@ def generate_datapath(schedule):
     for state_count in range(cycle_num):
         state_bin = f"{state_width}'b{state_number + state_count:0{state_width}b}"
         lines.append(f"  localparam S{state_count} = {state_bin};")
+    lines.append("")
 
     for input in inputs:
         lines.append(f"  reg [1:0] {input}_reg;")
@@ -130,6 +145,21 @@ def generate_datapath(schedule):
     lines.append("  end")
     lines.append("")
 
+    # generate mux for observing intermediate results
+    lines.append("  always@(*) begin")
+    lines.append("      observed = 0;")
+
+    select_index = 0
+    for unit in hardware:
+        for index in range(hardware[unit]):
+            lines.append(f"      if (select[{select_index}]) begin")
+            lines.append(f"         observed = {unit}{index}_out;")
+            lines.append("      end")
+            select_index += 1
+
+    lines.append("  end")
+    lines.append("")
+
     for output in schedule["outputs"]:
         lines.append(f" assign {output} = {schedule["outputs"][output]};")
 
@@ -139,4 +169,4 @@ def generate_datapath(schedule):
     with open("datapath.v", "w") as file:
         file.write("\n".join(lines))
 
-generate_datapath(schedule)
+#generate_datapath(schedule)
