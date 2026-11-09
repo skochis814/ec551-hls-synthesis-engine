@@ -59,4 +59,23 @@ def gen_ssa(equations):
         ssa_eqs.append(ssa)
     return ssa_eqs
 
+def gen_dag(ssa):
+    dag = {}
+    for eq in ssa:
+        dest = eq["dest"]
+        lhs = eq["lhs"]
+        rhs = eq["rhs"]
+
+        deps = []
+
+        if not lhs.endswith("_0"):
+            deps.append(lhs)
+        if not rhs.endswith("_0") and rhs != lhs:
+            deps.append(rhs)
+
+        node = eq.copy()
+        node["deps"] = deps
+
+        dag[dest] = node
+    return dag
             
