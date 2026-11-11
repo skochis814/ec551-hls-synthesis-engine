@@ -56,6 +56,21 @@ On the bundled input, constrained ASAP takes **13 cycles** and optimized constra
 - `outputs` maps each assigned variable name to its final SSA version.
 - `cycles` contains one list per clock cycle. Each operation includes `dest`, `lhs`, `rhs`, `op`, and `unit`. Unit IDs start at `0` for each operation type and can be reused across cycles.
 
+## Verilog Generation
+
+The Verilog generators convert the scheduler's output into synthesizable hardware. 
+
+## FPGA Demonstration
+
+The generated design can be demonstrated using a separate `wrapper.v` module. The wrapper connects the generated hardware to the board's peripherals.
+
+| FPGA Interface | Function |
+| --- | --- |
+| SW0-SW7 | Provides up to four primary input 2-bit values to be selected |
+| SW8-SW15 | Selects which arithmetic unit's output is displayed (switch to functional unit mappings are printed) |
+| Center Button | Resets the sequencer |
+| Up Button | The "clock signal" |
+
 ## Front-end files
 
 | File | Purpose |
@@ -64,3 +79,17 @@ On the bundled input, constrained ASAP takes **13 cycles** and optimized constra
 | `python/parse_input.py` | Parses equations, converts them to SSA, and builds the dependency graph. |
 | `python/export_ssa.py` | Writes the SSA equations to `ssa.txt` on request. |
 | `python/scheduler.py` | Implements the five scheduling modes and prepares the schedule for Verilog generation. |
+| `python/datapath_generate.py` | Automatically generates a Mux and Register based Verilog module  reflecting the chosen schedule, instantiating functional units as well |
+| `python/sequence_generate.py` | Automatically generates an FSM control Verilog module to manage Mux selects and register write-enables |
+| `python/top_module_generate.py` | Instantiates both the generated datapath and control modules into a top level module |
+
+## Complementary Verilog Files
+| File | Purpose |
+| --- | --- |
+| `verilog/add.v` | Basic adder module |
+| `verilog/sub.v` | Basic subtractor module |
+| `verilog/add.v` | Basic multiplier module |
+| `verilog/binary_to_bcd.v` | Converts the 32-bit outputs from the internal registers to BCD for display |
+| `verilog/seven_segment.v` | Drives the seven segment display on the FPGA |
+| `verilog/debouncer.v` | Used to debounce buttons for clock cycle advancing |
+| `verilog/wrapper.v` | Connects the generated modules to the board's peripherals for demo |
