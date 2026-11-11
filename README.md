@@ -71,6 +71,10 @@ The generated design can be demonstrated using a separate `wrapper.v` module. Th
 | Center Button | Resets the sequencer |
 | Up Button | The "clock signal" |
 
+## Testbench Simulation
+
+A simple testbench can be written in the format shown in `testbench.v` to verify the system functionality before board deployment. The testbench tests a random input combination. To ensure proper functionality, add the internal registers storing the results from each computation from the instantiation of `datapath.v`. Compare when these values are stored to the cycle number from the schedule to verify that the schedule was implemented in Verilog correctly.
+
 ## Front-end files
 
 | File | Purpose |
@@ -93,3 +97,4 @@ The generated design can be demonstrated using a separate `wrapper.v` module. Th
 | `verilog/seven_segment.v` | Drives the seven segment display on the FPGA |
 | `verilog/debouncer.v` | Used to debounce buttons for clock cycle advancing |
 | `verilog/wrapper.v` | Connects the generated modules to the board's peripherals for demo |
+| `verilog/testbench.v` | Simulation used to verify schedule was correctly implemented in Verilog |
