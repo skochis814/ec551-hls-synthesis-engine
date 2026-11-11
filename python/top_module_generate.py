@@ -1,16 +1,3 @@
-""" schedule = {
-    "inputs": {"A": "A_0", "B": "B_0"},
-    "outputs": {"X": "X_2", "Y": "Y_1"},
-    "cycles": [
-        [  # Cycle 0: X = A + B and Y = A * B
-            {"op": "add", "unit": 0, "lhs": "A_0", "rhs": "B_0", "dest": "X_1"},
-            {"op": "mul", "unit": 0, "lhs": "A_0", "rhs": "B_0", "dest": "Y_1"},
-        ],
-        [  # Cycle 1: X = X + Y
-            {"op": "add", "unit": 0, "lhs": "X_1", "rhs": "Y_1", "dest": "X_2"},
-        ],
-    ],
-} """
 
 
 def generate_top(schedule):
@@ -20,6 +7,7 @@ def generate_top(schedule):
     lines = []
     lines.append("module top(")
     lines.append("  input clk,")
+    lines.append("  input step,")
     lines.append("  input reset,")
     lines.append("  input [14:0] select,")
 
@@ -41,6 +29,7 @@ def generate_top(schedule):
 
     lines.append("  sequencer dut1(")
     lines.append("      .clk(clk),")
+    lines.append("      .step(step),")
     lines.append("      .reset(reset),")
     lines.append("      .load(load),")
     lines.append("      .state(state)")
@@ -51,6 +40,7 @@ def generate_top(schedule):
 
     lines.append("  datapath dut2(")
     lines.append("      .clk(clk),")
+    lines.append("      .step(step),")
     lines.append("      .load(load),")
     lines.append("      .select(select),")
     lines.append("      .state(state),")
@@ -66,18 +56,3 @@ def generate_top(schedule):
 
     with open("top.v", "w") as file:
         file.write("\n".join(lines))
-
-#generate_top(schedule)
-
-
-
-
-
-
-        
-        
-
-
-
-
-

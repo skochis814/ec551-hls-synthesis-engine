@@ -1,17 +1,4 @@
 
-""" schedule = {
-    "inputs": {"A": "A_0", "B": "B_0"},
-    "outputs": {"X": "X_2", "Y": "Y_1"},
-    "cycles": [
-        [  # Cycle 0: X = A + B and Y = A * B
-            {"op": "add", "unit": 0, "lhs": "A_0", "rhs": "B_0", "dest": "X_1"},
-            {"op": "mul", "unit": 0, "lhs": "A_0", "rhs": "B_0", "dest": "Y_1"},
-        ],
-        [  # Cycle 1: X = X + Y
-            {"op": "add", "unit": 0, "lhs": "X_1", "rhs": "Y_1", "dest": "X_2"},
-        ],
-    ],
-} """
 
 def generate_datapath(schedule):
     lines = []
@@ -36,6 +23,7 @@ def generate_datapath(schedule):
     
     lines.append("module datapath(")
     lines.append("  input clk,")
+    lines.append("  input step,")
     lines.append("  input load,")
     lines.append("  input [14:0] select,")
     lines.append(f"  input [{state_width - 1}:0] state,")
@@ -65,7 +53,7 @@ def generate_datapath(schedule):
     lines.append("")
 
     lines.append("  always @(posedge clk) begin")
-    lines.append("      if (load) begin")
+    lines.append("      if (load && step) begin")
     for input in inputs:
         lines.append(f"          {input}_reg <= {input};")
     lines.append("      end")
@@ -138,7 +126,7 @@ def generate_datapath(schedule):
     lines.append("")
     lines.append("  always @(posedge clk) begin")
     for cycle_num, cycle in enumerate(schedule["cycles"]):
-        lines.append(f"     if (state == S{cycle_num}) begin")
+        lines.append(f"     if (state == S{cycle_num} && step) begin")
         for equation in cycle:
             lines.append(f"         {equation["dest"]} <= {equation["op"]}{equation["unit"]}_out;")
         lines.append(f"     end")
@@ -147,13 +135,15 @@ def generate_datapath(schedule):
 
     # generate mux for observing intermediate results
     lines.append("  always@(*) begin")
-    lines.append("      observed = 0;")
+    lines.append("      observe = 0;")
 
     select_index = 0
     for unit in hardware:
         for index in range(hardware[unit]):
+            print(f"SW{select_index + 8} = {unit}{index}")
+
             lines.append(f"      if (select[{select_index}]) begin")
-            lines.append(f"         observed = {unit}{index}_out;")
+            lines.append(f"         observe = {unit}{index}_out;")
             lines.append("      end")
             select_index += 1
 
@@ -168,5 +158,3 @@ def generate_datapath(schedule):
 
     with open("datapath.v", "w") as file:
         file.write("\n".join(lines))
-
-#generate_datapath(schedule)

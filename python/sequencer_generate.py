@@ -1,17 +1,4 @@
 
-""" schedule = {
-    "inputs": {"A": "A_0", "B": "B_0"},
-    "outputs": {"X": "X_2", "Y": "Y_1"},
-    "cycles": [
-        [  # Cycle 0: X = A + B and Y = A * B
-            {"op": "add", "unit": 0, "lhs": "A_0", "rhs": "B_0", "dest": "X_1"},
-            {"op": "mul", "unit": 0, "lhs": "A_0", "rhs": "B_0", "dest": "Y_1"},
-        ],
-        [  # Cycle 1: X = X + Y
-            {"op": "add", "unit": 0, "lhs": "X_1", "rhs": "Y_1", "dest": "X_2"},
-        ],
-    ],
-} """
 
 def generate_sequencer(schedule):
     num_states = len(schedule["cycles"]) + 2
@@ -20,6 +7,7 @@ def generate_sequencer(schedule):
     lines = []
     lines.append("module sequencer(")
     lines.append("  input clk,")
+    lines.append("  input step,")
     lines.append("  input reset,")
     lines.append("  output reg load,")
     lines.append(f"  output reg [{state_width - 1}:0] state")
@@ -44,7 +32,7 @@ def generate_sequencer(schedule):
     lines.append("      if (reset) begin")
     lines.append("          state <= IDLE;")
     lines.append("      end")
-    lines.append("      else begin")
+    lines.append("      else if (step) begin")
     lines.append("          state <= next_state;")
     lines.append("      end")
     lines.append("  end")
@@ -73,4 +61,3 @@ def generate_sequencer(schedule):
     with open("sequencer.v", "w") as file:
         file.write("\n".join(lines))
 
-#generate_sequencer(schedule)
