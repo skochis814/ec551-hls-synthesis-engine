@@ -81,6 +81,52 @@ def constrained_alap(dag, constraints):
     schedule["cycles"].reverse()
     return schedule
 
+def optimized_constrained_asap(dag, constraints):
+    alap_schedule = alap(dag)
+    schedule = {}
+    schedule["cycles"] = [[]]
+
+    alap_pos = {}
+    for cycle_num, cycle in enumerate(alap_schedule["cycles"]):
+        for eq in cycle:
+            alap_pos[eq["dest"]] = cycle_num
+    
+    placed = 0
+    cycle_num = 0
+
+    while placed < len(dag):
+        if len(schedule["cycles"]) == cycle_num:
+            schedule["cycles"].append([])
+        
+        deps_done = []
+        for cycle in schedule["cycles"]:
+            for eq in cycle:
+                deps_done.append(eq["dest"])
+
+        cycle_nodes = []
+        for node in dag.values():
+            done = True
+            for dep in node["deps"]:
+                if dep not in deps_done:
+                    done = False
+            if done and node["dest"] not in deps_done:
+                cycle_nodes.append(node["dest"])
+
+        cycle_nodes.sort(key=alap_pos.get)
+
+        used = {"add": 0, "sub": 0, "mul": 0}
+        for dest in cycle_nodes:
+            node = dag[dest]
+            if constraints.get(node["op"]) is None or used[node["op"]] < constraints[node["op"]]:
+                schedule["cycles"][cycle_num].append(node)
+
+                placed = placed + 1
+                used[node["op"]] = used[node["op"]] + 1
+        
+        cycle_num = cycle_num + 1
+    return schedule
+
+
 def scheduler(mode, dag, constraints=None):
     if constraints is None:
         constraints = {}
@@ -93,6 +139,8 @@ def scheduler(mode, dag, constraints=None):
         schedule = alap(dag)
     elif mode == "constrained_alap":
         schedule = constrained_alap(dag, constraints)
+    elif mode == "optimized_constrained_asap":
+        schedule = optimized_constrained_asap(dag, constraints)
     else:
         return None
 
